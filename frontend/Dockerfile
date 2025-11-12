@@ -1,5 +1,5 @@
 # Frontend Dockerfile
-FROM node:18-alpine as builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
@@ -12,10 +12,7 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Copy environment file
-COPY .env.production .env
-
-# Build app
+# Build app (Vite will use env vars from build context)
 RUN npm run build
 
 # Production image
