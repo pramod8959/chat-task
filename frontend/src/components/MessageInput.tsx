@@ -17,7 +17,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ recipientId }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<number | null>(null);
   const { user } = useAuthStore();
-  const { addMessage } = useChatStore();
+  const { addMessage, activeConversationId } = useChatStore();
 
   const handleSendMessage = () => {
     if (!message.trim() && !uploadedFile) return;
@@ -29,17 +29,28 @@ export const MessageInput: React.FC<MessageInputProps> = ({ recipientId }) => {
     // Optimistic update - add message to UI immediately
     const optimisticMessage = {
       _id: tempId,
-      sender: user.id,
-      recipient: recipientId,
+      conversationId: activeConversationId || 'temp',
+      sender: {
+        _id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+      },
+      recipient: {
+        _id: recipientId,
+        username: '',
+        email: '',
+      },
       content: messageContent,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       delivered: false,
       read: false,
       mediaUrl: uploadedFile?.url,
       mediaType: uploadedFile?.type,
     };
 
-    addMessage(optimisticMessage as any);
+    addMessage(optimisticMessage);
     setIsSending(true);
 
     // Send via socket

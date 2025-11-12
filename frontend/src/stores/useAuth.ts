@@ -34,9 +34,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('user', JSON.stringify(response.user));
       set({ user: response.user, isAuthenticated: true, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Login failed'
+        : 'Login failed';
       set({ 
-        error: error.response?.data?.error || 'Login failed', 
+        error: errorMessage, 
         isLoading: false 
       });
       throw error;
@@ -50,9 +53,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('user', JSON.stringify(response.user));
       set({ user: response.user, isAuthenticated: true, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Registration failed'
+        : 'Registration failed';
       set({ 
-        error: error.response?.data?.error || 'Registration failed', 
+        error: errorMessage, 
         isLoading: false 
       });
       throw error;

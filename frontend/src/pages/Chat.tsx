@@ -1,5 +1,5 @@
 // File: frontend/src/pages/Chat.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuth';
 import { useChatStore } from '../stores/useChat';
@@ -8,6 +8,13 @@ import { getConversations, getMessages, getUsers } from '../api/messages';
 import { ChatList } from '../components/ChatList';
 import { ChatWindow } from '../components/ChatWindow';
 import { capitalizeWords } from '../utils/string';
+
+interface User {
+  _id: string;
+  username: string;
+  email: string;
+  isOnline?: boolean;
+}
 
 export const Chat: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuthStore();
@@ -23,9 +30,27 @@ export const Chat: React.FC = () => {
   } = useChatStore();
   
   const [selectedRecipientId, setSelectedRecipientId] = useState<string | null>(null);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [showUserList, setShowUserList] = useState(false);
   const navigate = useNavigate();
+
+  const loadConversations = useCallback(async () => {
+    try {
+      const data = await getConversations();
+      setConversations(data);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    }
+  }, [setConversations]);
+
+  const loadUsers = useCallback(async () => {
+    try {
+      const users = await getUsers();
+      setAllUsers(users);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  }, []);
 
   // Initialize socket and load data
   useEffect(() => {
@@ -34,36 +59,22 @@ export const Chat: React.FC = () => {
       return;
     }
 
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      initializeSocket(token);
-    }
+    const loadData = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        initializeSocket(token);
+      }
 
-    loadConversations();
-    loadUsers();
+      await loadConversations();
+      await loadUsers();
+    };
+
+    loadData();
 
     return () => {
       disconnectSocket();
     };
-  }, [isAuthenticated]);
-
-  const loadConversations = async () => {
-    try {
-      const data = await getConversations();
-      setConversations(data);
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-    }
-  };
-
-  const loadUsers = async () => {
-    try {
-      const users = await getUsers();
-      setAllUsers(users);
-    } catch (error) {
-      console.error('Error loading users:', error);
-    }
-  };
+  }, [isAuthenticated, navigate, loadConversations, loadUsers]);
 
   const handleSelectConversation = async (conversationId: string, recipientId: string) => {
     setActiveConversation(conversationId);
