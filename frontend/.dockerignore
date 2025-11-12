@@ -1,0 +1,39 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment files (keep .env.production for build)
+.env.development
+.env.local
+
+# IDE and OS
+.git
+.gitignore
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+*.test.tsx
+*.test.ts
+*.spec.tsx
+*.spec.ts
+__tests__
+__mocks__
+
+# Documentation
+*.md
+!README.md
+
+# Config files not needed in container
+.eslintrc.cjs
+.prettierrc
+
+# Misc
+tmp
+temp
