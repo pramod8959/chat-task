@@ -1,5 +1,6 @@
 // File: backend/src/config/index.ts
 import dotenv from 'dotenv';
+import type { StringValue } from 'ms';
 
 dotenv.config();
 
@@ -13,8 +14,8 @@ export const config = {
   // JWT
   jwtSecret: process.env.JWT_SECRET || 'change_me_in_production',
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'change_me_refresh_in_production',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
-  jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+  jwtExpiresIn: (process.env.JWT_EXPIRES_IN || '15m') as StringValue,
+  jwtRefreshExpiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as StringValue,
   
   // Redis
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',

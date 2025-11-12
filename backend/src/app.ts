@@ -31,8 +31,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Cookie parser
 app.use(cookieParser());
 
-// Rate limiting
-app.use('/api/', apiLimiter);
+// Rate limiting (disabled in test environment)
+if (config.nodeEnv !== 'test') {
+  app.use('/api/', apiLimiter);
+}
 
 // Request logging in development
 if (config.nodeEnv === 'development') {

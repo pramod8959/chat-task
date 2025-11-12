@@ -1,5 +1,5 @@
 // File: backend/src/utils/jwt.ts
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { config } from '../config';
 import { IUser } from '../models/User';
 
@@ -17,9 +17,11 @@ export const generateAccessToken = (user: IUser): string => {
     email: user.email,
   };
 
-  return jwt.sign(payload, config.jwtSecret as string, {
+  const options: SignOptions = {
     expiresIn: config.jwtExpiresIn,
-  });
+  };
+
+  return jwt.sign(payload, config.jwtSecret, options);
 };
 
 /**
@@ -31,9 +33,11 @@ export const generateRefreshToken = (user: IUser): string => {
     email: user.email,
   };
 
-  return jwt.sign(payload, config.jwtRefreshSecret as string, {
+  const options: SignOptions = {
     expiresIn: config.jwtRefreshExpiresIn,
-  });
+  };
+
+  return jwt.sign(payload, config.jwtRefreshSecret, options);
 };
 
 /**

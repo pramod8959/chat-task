@@ -1,6 +1,10 @@
 // File: backend/src/middlewares/rateLimit.middleware.ts
 import rateLimit from 'express-rate-limit';
+import { Request, Response, NextFunction } from 'express';
 import { config } from '../config';
+
+// Skip rate limiting in test environment
+const skip = () => config.nodeEnv === 'test';
 
 /**
  * General API rate limiter
@@ -12,6 +16,7 @@ export const apiLimiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  skip,
 });
 
 /**
@@ -24,6 +29,7 @@ export const authLimiter = rateLimit({
   message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  skip,
 });
 
 /**
@@ -35,4 +41,5 @@ export const uploadLimiter = rateLimit({
   message: 'Too many upload requests, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  skip,
 });

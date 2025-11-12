@@ -130,14 +130,17 @@ describe('Auth API', () => {
           email: 'test@example.com',
           password: 'password123',
           username: 'testuser',
-        });
+        })
+        .expect(201);
 
       const accessToken = loginResponse.body.accessToken;
+      const refreshToken = loginResponse.headers['set-cookie']?.[0];
 
       // Logout
       const response = await request(app)
         .post('/api/auth/logout')
         .set('Authorization', `Bearer ${accessToken}`)
+        .set('Cookie', refreshToken || '')
         .expect(200);
 
       expect(response.body).toHaveProperty('message');
