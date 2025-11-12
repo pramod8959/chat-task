@@ -1,6 +1,5 @@
 // File: backend/src/middlewares/rateLimit.middleware.ts
 import rateLimit from 'express-rate-limit';
-import { Request, Response, NextFunction } from 'express';
 import { config } from '../config';
 
 // Skip rate limiting in test environment
