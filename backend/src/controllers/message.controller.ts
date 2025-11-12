@@ -20,8 +20,9 @@ export const getMessages = async (req: AuthenticatedRequest, res: Response): Pro
     });
 
     res.status(200).json({ messages });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An error occurred';
+    res.status(400).json({ error: message });
   }
 };
 
@@ -41,7 +42,8 @@ export const getConversations = async (req: AuthenticatedRequest, res: Response)
     const conversations = await messageService.getUserConversations(userId);
 
     res.status(200).json({ conversations });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An error occurred';
+    res.status(400).json({ error: message });
   }
 };

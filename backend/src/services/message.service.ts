@@ -1,5 +1,4 @@
 // File: backend/src/services/message.service.ts
-import mongoose from 'mongoose';
 import { Message, IMessage } from '../models/Message';
 import { Conversation, IConversation } from '../models/Conversation';
 import { User } from '../models/User';
@@ -75,7 +74,7 @@ export const getMessages = async (params: MessageQueryParams): Promise<IMessage[
   const { conversationId, limit = 50, cursor } = params;
 
   // Build query
-  const query: any = { conversationId };
+  const query: Record<string, unknown> = { conversationId };
 
   // If cursor provided, get messages before that timestamp
   if (cursor) {
@@ -89,7 +88,7 @@ export const getMessages = async (params: MessageQueryParams): Promise<IMessage[
     .limit(limit)
     .populate('sender', 'username email avatar')
     .populate('recipient', 'username email avatar')
-    .lean() as any; // Use lean() for better performance
+    .lean() as unknown as IMessage[]; // Use lean() for better performance
 
   return messages.reverse(); // Reverse to show oldest first in UI
 };
@@ -136,7 +135,7 @@ export const getUndeliveredMessages = async (userId: string): Promise<IMessage[]
     delivered: false,
   })
     .populate('sender', 'username email avatar')
-    .lean() as any;
+    .lean() as unknown as IMessage[];
 
   return messages;
 };
@@ -151,7 +150,7 @@ export const getUserConversations = async (userId: string): Promise<IConversatio
     .populate('participants', 'username email avatar isOnline lastSeen')
     .populate('lastMessage')
     .sort({ lastMessageAt: -1 })
-    .lean() as any;
+    .lean() as unknown as IConversation[];
 
   return conversations;
 };

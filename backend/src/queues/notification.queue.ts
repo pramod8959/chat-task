@@ -34,7 +34,7 @@ export const notificationQueue = new Queue('notification', {
 export const notificationWorker = new Worker(
   'notification',
   async (job) => {
-    const { userId, title, message, type } = job.data;
+    const { userId, title, type } = job.data;
 
     logger.info(`Processing notification job ${job.id}: ${type} for user ${userId}`);
 

@@ -32,11 +32,11 @@ export const initializeSocket = (httpServer: HTTPServer): SocketIOServer => {
 
   // Handle connections
   io.on('connection', (socket) => {
-    const userId = (socket as any).userId;
+    const userId = (socket as unknown as { userId: string }).userId;
     logger.info(`Socket connected: ${socket.id} for user ${userId}`);
 
     // Register event handlers
-    handlePresenceEvents(socket, io);
+    handlePresenceEvents(socket);
     handleMessageEvents(socket, io);
 
     // Handle errors

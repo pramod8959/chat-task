@@ -21,8 +21,9 @@ export const getMe = async (req: AuthenticatedRequest, res: Response): Promise<v
     }
 
     res.status(200).json({ user });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An error occurred';
+    res.status(400).json({ error: message });
   }
 };
 
@@ -39,8 +40,9 @@ export const getUsers = async (req: AuthenticatedRequest, res: Response): Promis
       .lean();
 
     res.status(200).json({ users });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An error occurred';
+    res.status(400).json({ error: message });
   }
 };
 
@@ -60,7 +62,8 @@ export const updateMe = async (req: AuthenticatedRequest, res: Response): Promis
     ).select('-password -refreshTokens');
 
     res.status(200).json({ user });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An error occurred';
+    res.status(400).json({ error: message });
   }
 };

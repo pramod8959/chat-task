@@ -34,7 +34,7 @@ export const emailQueue = new Queue('email', {
 export const emailWorker = new Worker(
   'email',
   async (job) => {
-    const { to, subject, body, type } = job.data;
+    const { to, subject, type } = job.data;
 
     logger.info(`Processing email job ${job.id}: ${type} to ${to}`);
 

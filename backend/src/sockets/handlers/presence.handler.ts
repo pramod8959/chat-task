@@ -8,8 +8,8 @@ import logger from '../../config/logger';
 /**
  * Handle presence events (online/offline status)
  */
-export const handlePresenceEvents = (socket: Socket, io: any) => {
-  const userId = (socket as any).userId;
+export const handlePresenceEvents = (socket: Socket) => {
+  const userId = (socket as unknown as { userId: string }).userId;
 
   /**
    * User connected - set online status
@@ -46,7 +46,7 @@ export const handlePresenceEvents = (socket: Socket, io: any) => {
       }
 
       logger.info(`User ${userId} connected`);
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Error handling user connection:', error);
     }
   };
@@ -73,7 +73,7 @@ export const handlePresenceEvents = (socket: Socket, io: any) => {
       });
 
       logger.info(`User ${userId} disconnected`);
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Error handling user disconnection:', error);
     }
   };
@@ -88,7 +88,7 @@ export const handlePresenceEvents = (socket: Socket, io: any) => {
    * Manual presence update
    * Client can explicitly set their presence status
    */
-  socket.on('presence:set', async (data: any) => {
+  socket.on('presence:set', async (data: { status: string }) => {
     try {
       const { status } = data; // 'online', 'away', 'busy', etc.
 
@@ -102,7 +102,7 @@ export const handlePresenceEvents = (socket: Socket, io: any) => {
         isOnline: status === 'online',
         status,
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Error updating presence:', error);
     }
   });

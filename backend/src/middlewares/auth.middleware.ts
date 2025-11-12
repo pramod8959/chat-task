@@ -43,7 +43,7 @@ export const authenticate = async (
  * Socket authentication middleware
  * Validates JWT during Socket.IO handshake
  */
-export const authenticateSocket = (socket: any, next: any) => {
+export const authenticateSocket = (socket: { handshake: { auth?: { token?: string }; query?: { token?: string } }; userId?: string; email?: string }, next: (err?: Error) => void) => {
   try {
     // Token can be sent via query params or auth object
     const token =

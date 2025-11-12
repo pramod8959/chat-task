@@ -14,8 +14,7 @@ export interface ApiError extends Error {
 export const errorHandler = (
   err: ApiError,
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ): void => {
   // Log error
   logger.error('Error:', {
@@ -52,7 +51,7 @@ export const notFoundHandler = (
  * Async handler wrapper to catch errors in async route handlers
  */
 export const asyncHandler = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);

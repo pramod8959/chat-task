@@ -2,15 +2,12 @@
 import request from 'supertest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
-import { io as ioClient, Socket } from 'socket.io-client';
 import app from '../app';
-import { User } from '../models/User';
+import { User, IUser } from '../models/User';
 import { Message } from '../models/Message';
 import { generateTokens } from '../utils/jwt';
 
 let mongoServer: MongoMemoryServer;
-let clientSocket: Socket;
-let serverPort: number;
 
 beforeAll(async () => {
   // Start in-memory MongoDB
@@ -20,9 +17,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  if (clientSocket && clientSocket.connected) {
-    clientSocket.disconnect();
-  }
   await mongoose.disconnect();
   await mongoServer.stop();
 });
@@ -33,10 +27,9 @@ afterEach(async () => {
 });
 
 describe('Message Service', () => {
-  let user1: any;
-  let user2: any;
+  let user1: IUser;
+  let user2: IUser;
   let token1: string;
-  let token2: string;
 
   beforeEach(async () => {
     // Create test users
@@ -54,9 +47,7 @@ describe('Message Service', () => {
 
     // Generate tokens
     const tokens1 = generateTokens(user1);
-    const tokens2 = generateTokens(user2);
     token1 = tokens1.accessToken;
-    token2 = tokens2.accessToken;
   });
 
   describe('Message Persistence', () => {

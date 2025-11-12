@@ -16,7 +16,7 @@ export interface LoginData {
 /**
  * Register a new user
  */
-export const registerUser = async (data: RegisterData): Promise<{ user: IUser; tokens: any }> => {
+export const registerUser = async (data: RegisterData): Promise<{ user: IUser; tokens: { accessToken: string; refreshToken: string } }> => {
   // Check if user already exists
   const existingUser = await User.findOne({ email: data.email });
   if (existingUser) {
@@ -45,7 +45,7 @@ export const registerUser = async (data: RegisterData): Promise<{ user: IUser; t
 /**
  * Login user
  */
-export const loginUser = async (data: LoginData): Promise<{ user: IUser; tokens: any }> => {
+export const loginUser = async (data: LoginData): Promise<{ user: IUser; tokens: { accessToken: string; refreshToken: string } }> => {
   // Find user by email
   const user = await User.findOne({ email: data.email });
   if (!user) {

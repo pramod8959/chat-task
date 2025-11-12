@@ -7,15 +7,15 @@ import logger from '../../config/logger';
 /**
  * Handle message events
  */
-export const handleMessageEvents = (socket: Socket, io: any) => {
+export const handleMessageEvents = (socket: Socket, io: { to: (room: string) => { emit: (event: string, data: unknown) => void } }) => {
   /**
    * Send message event
    * Client emits: { to, content, tempId, mediaUrl, mediaType }
    */
-  socket.on('message:send', async (data: any) => {
+  socket.on('message:send', async (data: { to: string; content: string; tempId?: string; mediaUrl?: string; mediaType?: string }) => {
     try {
       const { to, content, tempId, mediaUrl, mediaType } = data;
-      const sender = (socket as any).userId;
+      const sender = (socket as unknown as { userId: string }).userId;
 
       // Validate data
       if (!to || !content) {
@@ -56,9 +56,10 @@ export const handleMessageEvents = (socket: Socket, io: any) => {
       }
 
       logger.debug(`Message sent from ${sender} to ${to}`);
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Error sending message:', error);
-      socket.emit('message:error', { error: error.message });
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      socket.emit('message:error', { error: message });
     }
   });
 
@@ -66,7 +67,7 @@ export const handleMessageEvents = (socket: Socket, io: any) => {
    * Message delivered event
    * Client emits when they receive a message: { messageId }
    */
-  socket.on('message:delivered', async (data: any) => {
+  socket.on('message:delivered', async (data: { messageId: string }) => {
     try {
       const { messageId } = data;
 
@@ -81,7 +82,7 @@ export const handleMessageEvents = (socket: Socket, io: any) => {
           deliveredAt: message.deliveredAt,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Error marking message as delivered:', error);
     }
   });
@@ -90,7 +91,7 @@ export const handleMessageEvents = (socket: Socket, io: any) => {
    * Message read event
    * Client emits when they read a message: { messageId }
    */
-  socket.on('message:read', async (data: any) => {
+  socket.on('message:read', async (data: { messageId: string }) => {
     try {
       const { messageId } = data;
 
@@ -105,7 +106,7 @@ export const handleMessageEvents = (socket: Socket, io: any) => {
           readAt: message.readAt,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Error marking message as read:', error);
     }
   });
@@ -114,9 +115,9 @@ export const handleMessageEvents = (socket: Socket, io: any) => {
    * Typing indicator
    * Client emits: { to }
    */
-  socket.on('typing', (data: any) => {
+  socket.on('typing', (data: { to: string }) => {
     const { to } = data;
-    const sender = (socket as any).userId;
+    const sender = (socket as unknown as { userId: string }).userId;
 
     // Notify recipient that sender is typing
     io.to(to).emit('user:typing', { userId: sender });
@@ -126,9 +127,9 @@ export const handleMessageEvents = (socket: Socket, io: any) => {
    * Stop typing indicator
    * Client emits: { to }
    */
-  socket.on('typing:stop', (data: any) => {
+  socket.on('typing:stop', (data: { to: string }) => {
     const { to } = data;
-    const sender = (socket as any).userId;
+    const sender = (socket as unknown as { userId: string }).userId;
 
     // Notify recipient that sender stopped typing
     io.to(to).emit('user:typing:stop', { userId: sender });

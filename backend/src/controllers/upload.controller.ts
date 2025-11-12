@@ -19,7 +19,8 @@ export const getSignedUrl = async (req: AuthenticatedRequest, res: Response): Pr
     });
 
     res.status(200).json(result);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An error occurred';
+    res.status(400).json({ error: message });
   }
 };

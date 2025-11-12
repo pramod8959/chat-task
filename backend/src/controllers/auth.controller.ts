@@ -36,8 +36,9 @@ export const register = async (req: AuthenticatedRequest, res: Response): Promis
       },
       accessToken: tokens.accessToken,
     });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An error occurred';
+    res.status(400).json({ error: message });
   }
 };
 
@@ -69,8 +70,9 @@ export const login = async (req: AuthenticatedRequest, res: Response): Promise<v
       },
       accessToken: tokens.accessToken,
     });
-  } catch (error: any) {
-    res.status(401).json({ error: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An error occurred';
+    res.status(401).json({ error: message });
   }
 };
 
@@ -94,8 +96,9 @@ export const refresh = async (req: AuthenticatedRequest, res: Response): Promise
     const { accessToken } = await authService.refreshAccessToken(refreshToken);
 
     res.status(200).json({ accessToken });
-  } catch (error: any) {
-    res.status(401).json({ error: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An error occurred';
+    res.status(401).json({ error: message });
   }
 };
 
@@ -116,7 +119,8 @@ export const logout = async (req: AuthenticatedRequest, res: Response): Promise<
     res.clearCookie('refreshToken');
 
     res.status(200).json({ message: 'Logout successful' });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An error occurred';
+    res.status(400).json({ error: message });
   }
 };
