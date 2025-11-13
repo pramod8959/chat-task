@@ -24,7 +24,7 @@ export const handleMessageEvents = (socket: Socket, io: { to: (room: string) => 
         return;
       }
 
-      let targetConversationId = conversationId;
+      const targetConversationId = conversationId;
       let recipients: string[] = [];
 
       // If conversationId provided, use it (for both 1-to-1 and group chats)

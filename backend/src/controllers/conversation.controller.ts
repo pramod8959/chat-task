@@ -31,9 +31,9 @@ export const createGroup = async (req: AuthenticatedRequest, res: Response): Pro
     await conversation.populate('participants', 'username avatar status');
 
     res.status(201).json(conversation);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating group:', error);
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to create group' });
   }
 };
 
@@ -60,9 +60,9 @@ export const addMembers = async (req: AuthenticatedRequest, res: Response): Prom
     await conversation.populate('participants', 'username avatar status');
 
     res.json(conversation);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error adding members:', error);
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to add members' });
   }
 };
 
@@ -83,9 +83,9 @@ export const removeMember = async (req: AuthenticatedRequest, res: Response): Pr
     await conversation.populate('participants', 'username avatar status');
 
     res.json(conversation);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error removing member:', error);
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to remove member' });
   }
 };
 
@@ -107,9 +107,9 @@ export const updateGroup = async (req: AuthenticatedRequest, res: Response): Pro
     await conversation.populate('participants', 'username avatar status');
 
     res.json(conversation);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating group:', error);
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to update group' });
   }
 };
 
@@ -123,9 +123,9 @@ export const getUserConversations = async (req: AuthenticatedRequest, res: Respo
     const conversations = await conversationService.getUserConversations(userId);
 
     res.json(conversations);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error getting conversations:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to get conversations' });
   }
 };
 
@@ -150,9 +150,9 @@ export const getOrCreateConversation = async (req: AuthenticatedRequest, res: Re
     await conversation.populate('participants', 'username avatar status');
 
     res.json(conversation);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error getting/creating conversation:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to get/create conversation' });
   }
 };
 
@@ -166,8 +166,8 @@ export const getUnreadCounts = async (req: AuthenticatedRequest, res: Response):
     const unreadCounts = await messageService.getUnreadCounts(userId);
 
     res.json(unreadCounts);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error getting unread counts:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to get unread counts' });
   }
 };
