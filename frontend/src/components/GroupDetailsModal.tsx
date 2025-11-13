@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { removeGroupMember, updateGroup, Conversation } from '../api/conversations';
+import React, { useState, useEffect } from 'react';
+import { removeGroupMember, updateGroup, addGroupMembers, Conversation } from '../api/conversations';
+import { getUsers } from '../api/messages';
 import { useAuthStore } from '../stores/useAuth';
 
 interface GroupDetailsModalProps {
@@ -20,6 +21,73 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
   const [groupName, setGroupName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showAddMembers, setShowAddMembers] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Array<{ _id: string; username: string; email: string }>>([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [allUsers, setAllUsers] = useState<Array<{ _id: string; username: string; email: string }>>([]);
+
+  useEffect(() => {
+    if (isOpen && showAddMembers) {
+      loadUsers();
+    }
+  }, [isOpen, showAddMembers]);
+
+  const loadUsers = async () => {
+    try {
+      const users = await getUsers();
+      setAllUsers(users);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    // Filter out current members and search
+    const currentMemberIds = conversation?.participants.map(p => p._id) || [];
+    const filtered = allUsers.filter(
+      (u) =>
+        !currentMemberIds.includes(u._id) &&
+        (u.username.toLowerCase().includes(query.toLowerCase()) ||
+          u.email.toLowerCase().includes(query.toLowerCase()))
+    );
+    setSearchResults(filtered);
+  };
+
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUsers((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
+  };
+
+  const handleAddMembers = async () => {
+    if (selectedUsers.length === 0) {
+      setError('Please select at least one user to add');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      await addGroupMembers(conversation!._id, selectedUsers);
+      setShowAddMembers(false);
+      setSearchQuery('');
+      setSearchResults([]);
+      setSelectedUsers([]);
+      onUpdate();
+    } catch (err) {
+      setError(err instanceof Error && 'response' in err && typeof err.response === 'object' && err.response && 'data' in err.response && typeof err.response.data === 'object' && err.response.data && 'error' in err.response.data ? String(err.response.data.error) : 'Failed to add members');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!isOpen || !conversation || !conversation.isGroup) return null;
 
@@ -142,12 +210,91 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
 
         {/* Members List */}
         <div className="mb-4">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">
-            Members ({conversation.participants.length})
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-bold text-gray-800">
+              Members ({conversation.participants.length})
+            </h3>
+            {isAdmin && !showAddMembers && (
+              <button
+                onClick={() => setShowAddMembers(true)}
+                className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition"
+              >
+                + Add Members
+              </button>
+            )}
+          </div>
 
-          <div className="space-y-2">
-            {conversation.participants.map((participant) => {
+          {/* Add Members Section */}
+          {showAddMembers && isAdmin && (
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-gray-800">Add New Members</h4>
+                <button
+                  onClick={() => {
+                    setShowAddMembers(false);
+                    setSearchQuery('');
+                    setSearchResults([]);
+                    setSelectedUsers([]);
+                    setError('');
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ×
+                </button>
+              </div>
+
+              <input
+                type="text"
+                placeholder="Search users by name or email..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+              />
+
+              {searchResults.length > 0 && (
+                <div className="max-h-40 overflow-y-auto mb-3 space-y-1">
+                  {searchResults.map((u) => (
+                    <div
+                      key={u._id}
+                      onClick={() => toggleUserSelection(u._id)}
+                      className={`p-2 rounded cursor-pointer transition ${
+                        selectedUsers.includes(u._id)
+                          ? 'bg-blue-200'
+                          : 'bg-white hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-sm font-semibold">
+                          {u.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{u.username}</p>
+                          <p className="text-xs text-gray-500">{u.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedUsers.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Selected: {selectedUsers.length} user(s)
+                  </p>
+                  <button
+                    onClick={handleAddMembers}
+                    disabled={isLoading}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {isLoading ? 'Adding...' : `Add ${selectedUsers.length} Member(s)`}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-2">{conversation.participants.map((participant) => {
               const isSelf = participant._id === user?.id;
               const isGroupAdmin = participant._id === conversation.groupAdmin;
 

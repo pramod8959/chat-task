@@ -2,9 +2,9 @@
 
 A full-stack, production-ready real-time chat application built with TypeScript, React, Node.js, Socket.IO, MongoDB, and Redis. This MVP demonstrates enterprise-level architecture with real-time messaging, authentication, presence tracking, background job processing, and horizontal scalability.
 
-> **Project Status**: ✅ Production-ready for one-to-one chat | 85% complete
+> **Project Status**: ✅ Production-ready | 100% complete
 > 
-> **Missing Feature**: Group chat functionality (see [Project Checklist](./PROJECT_CHECKLIST.md))
+> **Latest Features**: Group chat functionality and unread message badges added!
 
 ---
 
@@ -75,6 +75,9 @@ docker-compose up --build
 
 ### Core Functionality
 - ✅ **One-to-One Chat**: Direct messaging between users with persistent message storage
+- ✅ **Group Chat**: Create and manage group conversations with multiple participants
+- ✅ **Group Management**: Add/remove members, update group name and avatar, admin controls
+- ✅ **Unread Message Badges**: Real-time unread count indicators for all conversations
 - ✅ **JWT Authentication**: Access & refresh token flow with secure httpOnly cookies
 - ✅ **Real-Time Communication**: Socket.IO for instant message delivery
 - ✅ **Presence Management**: Online/offline status tracking across instances
@@ -272,8 +275,16 @@ npm test -- --coverage
 - `GET /api/users` - Get all users (for contact list)
 - `PATCH /api/users/me` - Update profile
 
+### Conversations
+- `GET /api/conversations` - Get all conversations for current user
+- `GET /api/conversations/direct/:userId` - Get or create one-to-one conversation
+- `POST /api/conversations/groups` - Create a new group conversation
+- `POST /api/conversations/groups/:id/members` - Add members to a group
+- `DELETE /api/conversations/groups/:id/members/:userId` - Remove a member from a group
+- `PATCH /api/conversations/groups/:id` - Update group information (name, avatar)
+- `GET /api/conversations/unread-counts` - Get unread message counts for all conversations
+
 ### Messages
-- `GET /api/messages/conversations` - Get user conversations
 - `GET /api/messages/:conversationId?limit=50&cursor=<timestamp>` - Get messages with pagination
 
 ### Uploads
@@ -344,26 +355,51 @@ await sendNotification({
 ## 🎯 How to Demo
 
 1. **Start the application** using Docker or locally
-2. **Open two browser windows/tabs**
-3. **Register two different users:**
+2. **Open multiple browser windows/tabs** (at least 3 for testing group chat)
+3. **Register different users:**
    - Window 1: Register as `alice@example.com`
    - Window 2: Register as `bob@example.com`
+   - Window 3: Register as `charlie@example.com`
+
+### Test One-to-One Chat
 4. **In Window 1 (Alice):**
    - Click "New Chat"
    - Select Bob from the user list
    - Send a message
 5. **In Window 2 (Bob):**
-   - See Alice's message appear in real-time
+   - See Alice's message appear in real-time with unread badge
    - Reply to Alice
 6. **Observe:**
    - Real-time message delivery
-   - Online/offline indicators
+   - Online/offline indicators (green dot)
    - Typing indicators (type without sending)
    - Message delivery & read receipts (checkmarks)
-7. **Test offline messages:**
-   - Close Window 2 (Bob)
-   - Send messages from Window 1 (Alice)
-   - Reopen Window 2 (Bob) - messages delivered on reconnect
+   - Unread count badges on conversations
+
+### Test Group Chat
+7. **In Window 1 (Alice):**
+   - Click "New Group" button
+   - Enter group name (e.g., "Team Chat")
+   - Select Bob and Charlie as members
+   - Click "Create Group"
+8. **In Windows 2 & 3 (Bob & Charlie):**
+   - See the new group appear in the chat list
+9. **Send messages in the group:**
+   - Alice sends: "Hello team!"
+   - Bob and Charlie see the message instantly
+   - All members can reply
+10. **Test group management:**
+    - Click "Group Info" button in the chat header
+    - View all members with online status
+    - Admin can update group name
+    - Admin can remove members
+    - See admin badge on group creator
+
+### Test Offline Behavior
+11. **Test offline messages:**
+    - Close Window 2 (Bob goes offline)
+    - Send messages from Window 1 (Alice)
+    - Reopen Window 2 (Bob) - messages delivered on reconnect with unread badges
 
 ## 🔐 Security Features
 
@@ -422,13 +458,24 @@ await sendNotification({
 ### Conversation
 ```typescript
 {
-  participants: ObjectId[] (2 users)
-  lastMessage?: ObjectId
+  participants: ObjectId[] (2+ users, 2 for direct chat, 3+ for groups)
+  isGroup: boolean
+  groupName?: string (required for groups)
+  groupAvatar?: string
+  groupAdmin?: ObjectId (user who created the group)
+  lastMessage?: {
+    _id?: string
+    content: string
+    createdAt: string
+  }
   lastMessageAt: Date
   createdAt: Date
   updatedAt: Date
 }
 // Index: { participants: 1 }
+// Validation: 
+// - Direct chat: exactly 2 participants, isGroup=false
+// - Group chat: 3+ participants, isGroup=true, groupName required
 ```
 
 ### Message
@@ -455,8 +502,12 @@ await sendNotification({
 
 ## 🚧 Known Limitations & Future Enhancements
 
+### Recently Added ✨
+- ✅ **Group chat** - Create groups with multiple participants
+- ✅ **Group management** - Add/remove members, update group info
+- ✅ **Unread message badges** - Real-time unread counts for all conversations
+
 ### Intentionally Deferred (for MVP)
-- ❌ Group chat (architecture supports extension to N participants)
 - ❌ Message editing/deletion
 - ❌ Full-text search on messages
 - ❌ Voice/video calls
@@ -464,9 +515,10 @@ await sendNotification({
 - ❌ Message reactions/emojis
 - ❌ User blocking
 - ❌ Advanced media processing (thumbnails, compression)
+- ❌ Group chat permissions (mute, admin roles)
 
 ### Next Steps
-1. Implement group conversations (extend Conversation.participants)
+1. Implement message editing and deletion
 2. Add message search with Elasticsearch or MongoDB Atlas Search
 3. Implement BullMQ for async media processing
 4. Add E2E tests with Playwright/Cypress
@@ -474,6 +526,7 @@ await sendNotification({
 6. Add rate limiting per user (not just per IP)
 7. Implement user profile pictures
 8. Add message export functionality
+9. Add group chat advanced features (permissions, mentions, polls)
 
 ## 📝 Environment Variables
 
@@ -509,10 +562,13 @@ MIT
 
 ---
 
-**Built in 48 hours for interview assessment** - Demonstrates:
+**Built with production-ready practices** - Demonstrates:
 - Full-stack TypeScript development
-- Real-time system architecture
+- Real-time system architecture with Socket.IO
+- Group chat implementation with proper validation
+- Unread message tracking and real-time updates
 - Production-ready code structure
 - Testing practices
 - Scalability considerations
 - DevOps (Docker, CI/CD)
+- Clean architecture and separation of concerns
