@@ -1,6 +1,7 @@
 // File: backend/src/sockets/handlers/message.handler.ts
 import { Socket } from 'socket.io';
 import * as messageService from '../../services/message.service';
+import { Conversation } from '../../models/Conversation';
 import { sendNotification } from '../../queues';
 import logger from '../../config/logger';
 
@@ -10,23 +11,44 @@ import logger from '../../config/logger';
 export const handleMessageEvents = (socket: Socket, io: { to: (room: string) => { emit: (event: string, data: unknown) => void } }) => {
   /**
    * Send message event
-   * Client emits: { to, content, tempId, mediaUrl, mediaType }
+   * Client emits: { to, conversationId, content, tempId, mediaUrl, mediaType }
    */
-  socket.on('message:send', async (data: { to: string; content: string; tempId?: string; mediaUrl?: string; mediaType?: string }) => {
+  socket.on('message:send', async (data: { to?: string; conversationId?: string; content: string; tempId?: string; mediaUrl?: string; mediaType?: string }) => {
     try {
-      const { to, content, tempId, mediaUrl, mediaType } = data;
+      const { to, conversationId, content, tempId, mediaUrl, mediaType } = data;
       const sender = (socket as unknown as { userId: string }).userId;
 
       // Validate data
-      if (!to || !content) {
+      if (!content || (!to && !conversationId)) {
         socket.emit('message:error', { error: 'Missing required fields', tempId });
         return;
+      }
+
+      let targetConversationId = conversationId;
+      let recipients: string[] = [];
+
+      // If conversationId provided, use it (for both 1-to-1 and group chats)
+      if (conversationId) {
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+          socket.emit('message:error', { error: 'Conversation not found', tempId });
+          return;
+        }
+
+        // Get all participants except sender
+        recipients = conversation.participants
+          .map((p) => p.toString())
+          .filter((p) => p !== sender);
+      } else if (to) {
+        // Legacy 1-to-1 support: single recipient
+        recipients = [to];
       }
 
       // Save message to database
       const message = await messageService.sendMessage({
         sender,
-        recipient: to,
+        recipient: recipients[0], // For backward compatibility, store first recipient
+        conversationId: targetConversationId,
         content,
         mediaUrl,
         mediaType,
@@ -38,24 +60,28 @@ export const handleMessageEvents = (socket: Socket, io: { to: (room: string) => 
         message: message.toObject(),
       });
 
-      // Emit to recipient if online
-      io.to(to).emit('message:received', {
-        message: message.toObject(),
+      // Emit to all recipients if online (handles both 1-to-1 and group)
+      recipients.forEach((recipientId) => {
+        io.to(recipientId).emit('message:received', {
+          message: message.toObject(),
+        });
       });
 
-      // Send push notification via BullMQ (background job)
+      // Send push notifications via BullMQ (background job)
       try {
-        await sendNotification({
-          userId: to,
-          title: `New message from ${sender}`,
-          message: content.substring(0, 100),
-          type: 'message',
-        });
+        for (const recipientId of recipients) {
+          await sendNotification({
+            userId: recipientId,
+            title: `New message from ${sender}`,
+            message: content.substring(0, 100),
+            type: 'message',
+          });
+        }
       } catch (error) {
         logger.error('Failed to queue notification:', error);
       }
 
-      logger.debug(`Message sent from ${sender} to ${to}`);
+      logger.debug(`Message sent from ${sender} to ${recipients.join(', ')}`);
     } catch (error) {
       logger.error('Error sending message:', error);
       const message = error instanceof Error ? error.message : 'An error occurred';

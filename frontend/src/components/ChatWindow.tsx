@@ -11,13 +11,17 @@ interface ChatWindowProps {
   recipientId: string;
   recipientName: string;
   isOnline: boolean;
+  isGroup?: boolean;
+  onGroupInfoClick?: () => void;
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({ 
   messages, 
   recipientId, 
   recipientName,
-  isOnline 
+  isOnline,
+  isGroup = false,
+  onGroupInfoClick
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { typingUsers } = useChatStore();
@@ -31,28 +35,42 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   return (
     <div className="flex-1 flex flex-col bg-gray-50">
       {/* Header */}
-      <div className="p-4 bg-white border-b border-gray-200 flex items-center space-x-3">
-        <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
-            {recipientName.charAt(0).toUpperCase()}
-          </div>
-          {isOnline && (
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-          )}
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-gray-900">{capitalizeWords(recipientName)}</h3>
-          <p className="text-xs text-gray-500">
-            {isOnline ? (
-              <span className="flex items-center">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>
-                Online
-              </span>
-            ) : (
-              'Offline'
+      <div className="p-4 bg-white border-b border-gray-200 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
+              {recipientName.charAt(0).toUpperCase()}
+            </div>
+            {isOnline && !isGroup && (
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
             )}
-          </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">{capitalizeWords(recipientName)}</h3>
+            <p className="text-xs text-gray-500">
+              {isGroup ? (
+                'Group Chat'
+              ) : isOnline ? (
+                <span className="flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>
+                  Online
+                </span>
+              ) : (
+                'Offline'
+              )}
+            </p>
+          </div>
         </div>
+
+        {/* Group Info Button */}
+        {isGroup && onGroupInfoClick && (
+          <button
+            onClick={onGroupInfoClick}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+          >
+            Group Info
+          </button>
+        )}
       </div>
 
       {/* Messages */}

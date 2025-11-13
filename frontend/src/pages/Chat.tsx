@@ -4,9 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuth';
 import { useChatStore } from '../stores/useChat';
 import { initializeSocket, disconnectSocket } from '../sockets/socket';
-import { getConversations, getMessages, getUsers } from '../api/messages';
+import { getMessages, getUsers } from '../api/messages';
+import { getUserConversations, getUnreadCounts } from '../api/conversations';
 import { ChatList } from '../components/ChatList';
 import { ChatWindow } from '../components/ChatWindow';
+import { ProfileModal } from '../components/ProfileModal';
+import GroupChatModal from '../components/GroupChatModal';
+import GroupDetailsModal from '../components/GroupDetailsModal';
 import { capitalizeWords } from '../utils/string';
 
 interface User {
@@ -32,12 +36,32 @@ export const Chat: React.FC = () => {
   const [selectedRecipientId, setSelectedRecipientId] = useState<string | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [showUserList, setShowUserList] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [showGroupDetails, setShowGroupDetails] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<{ [conversationId: string]: number }>({});
   const navigate = useNavigate();
 
   const loadConversations = useCallback(async () => {
     try {
-      const data = await getConversations();
-      setConversations(data);
+      const data = await getUserConversations();
+      // Transform the data to match the expected type
+      const transformedData = data.map((conv) => ({
+        ...conv,
+        participants: conv.participants.map((p) => ({
+          _id: p._id,
+          username: p.username,
+          email: p.email || '',
+          avatar: p.avatar,
+          isOnline: p.isOnline || false,
+          lastSeen: p.lastSeen || new Date().toISOString(),
+        })),
+      }));
+      setConversations(transformedData as any);
+      
+      // Load unread counts
+      const counts = await getUnreadCounts();
+      setUnreadCounts(counts);
     } catch (error) {
       console.error('Error loading conversations:', error);
     }
@@ -116,13 +140,28 @@ export const Chat: React.FC = () => {
   const getRecipientInfo = () => {
     if (!selectedRecipientId) return null;
 
-    // Try to find in conversations first
+    // Check if it's a group chat (selectedRecipientId === conversationId for groups)
+    const groupConversation = conversations.find((conv) => 
+      conv.isGroup && (conv._id === selectedRecipientId || conv._id === activeConversationId)
+    );
+    
+    if (groupConversation) {
+      return {
+        name: groupConversation.groupName || 'Group Chat',
+        isOnline: false, // Groups don't have online status
+        isGroup: true,
+      };
+    }
+
+    // Try to find in conversations first (for 1-to-1)
     for (const conv of conversations) {
+      if (conv.isGroup) continue; // Skip groups
       const recipient = conv.participants.find((p) => p._id === selectedRecipientId);
       if (recipient) {
         return {
           name: recipient.username,
           isOnline: onlineUsers.has(recipient._id),
+          isGroup: false,
         };
       }
     }
@@ -132,11 +171,13 @@ export const Chat: React.FC = () => {
     return user ? {
       name: user.username,
       isOnline: onlineUsers.has(user._id),
+      isGroup: false,
     } : null;
   };
 
   const recipientInfo = getRecipientInfo();
   const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
+  const activeConversation = conversations.find((c) => c._id === activeConversationId);
 
   return (
     <div className="h-screen flex flex-col">
@@ -145,6 +186,18 @@ export const Chat: React.FC = () => {
         <h1 className="text-xl font-bold">Chat App</h1>
         <div className="flex items-center space-x-4">
           <span className="text-sm font-semibold">{capitalizeWords(user?.username || '')}</span>
+          <button
+            onClick={() => setShowProfileModal(true)}
+            className="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded transition-colors"
+          >
+            Profile
+          </button>
+          <button
+            onClick={() => setShowGroupModal(true)}
+            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded transition-colors"
+          >
+            New Group
+          </button>
           <button
             onClick={() => setShowUserList(!showUserList)}
             className="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded transition-colors"
@@ -163,7 +216,8 @@ export const Chat: React.FC = () => {
       {/* Main Chat Area */}
       <div className="flex-1 flex overflow-hidden">
         <ChatList 
-          conversations={conversations} 
+          conversations={conversations}
+          unreadCounts={unreadCounts}
           onSelectConversation={handleSelectConversation}
         />
 
@@ -173,6 +227,8 @@ export const Chat: React.FC = () => {
             recipientId={selectedRecipientId}
             recipientName={recipientInfo.name}
             isOnline={recipientInfo.isOnline}
+            isGroup={recipientInfo.isGroup}
+            onGroupInfoClick={recipientInfo.isGroup ? () => setShowGroupDetails(true) : undefined}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center bg-gray-50">
@@ -218,6 +274,27 @@ export const Chat: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Profile Modal */}
+      <ProfileModal 
+        isOpen={showProfileModal} 
+        onClose={() => setShowProfileModal(false)} 
+      />
+
+      {/* Group Chat Modal */}
+      <GroupChatModal
+        isOpen={showGroupModal}
+        onClose={() => setShowGroupModal(false)}
+        onGroupCreated={loadConversations}
+      />
+
+      {/* Group Details Modal */}
+      <GroupDetailsModal
+        isOpen={showGroupDetails}
+        onClose={() => setShowGroupDetails(false)}
+        conversation={activeConversation || null}
+        onUpdate={loadConversations}
+      />
     </div>
   );
 };

@@ -37,6 +37,10 @@ export interface Conversation {
     isOnline: boolean;
     lastSeen: string;
   }>;
+  isGroup?: boolean;
+  groupName?: string;
+  groupAvatar?: string;
+  groupAdmin?: string;
   lastMessage?: Message;
   lastMessageAt: string;
   createdAt: string;

@@ -62,3 +62,15 @@ export const getMe = async () => {
   const response = await apiClient.get('/users/me');
   return response.data.user;
 };
+
+/**
+ * Update user profile
+ */
+export const updateProfile = async (data: {
+  username?: string;
+  bio?: string;
+  avatar?: string;
+}) => {
+  const response = await apiClient.patch('/users/me', data);
+  return response.data.user;
+};
