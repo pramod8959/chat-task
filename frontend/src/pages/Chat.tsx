@@ -45,19 +45,7 @@ export const Chat: React.FC = () => {
   const loadConversations = useCallback(async () => {
     try {
       const data = await getUserConversations();
-      // Transform the data to match the expected type
-      const transformedData = data.map((conv) => ({
-        ...conv,
-        participants: conv.participants.map((p) => ({
-          _id: p._id,
-          username: p.username,
-          email: p.email || '',
-          avatar: p.avatar,
-          isOnline: p.isOnline || false,
-          lastSeen: p.lastSeen || new Date().toISOString(),
-        })),
-      }));
-      setConversations(transformedData as any);
+      setConversations(data);
       
       // Load unread counts
       const counts = await getUnreadCounts();

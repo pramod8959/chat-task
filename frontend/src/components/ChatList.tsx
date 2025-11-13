@@ -20,7 +20,7 @@ export const ChatList: React.FC<ChatListProps> = ({ conversations, unreadCounts 
     return conversation.participants.find((p) => p._id !== user?.id);
   };
 
-  const getConversationDisplay = (conversation: any) => {
+  const getConversationDisplay = (conversation: Conversation) => {
     if (conversation.isGroup) {
       return {
         name: conversation.groupName || 'Unnamed Group',

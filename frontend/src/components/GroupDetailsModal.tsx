@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { removeGroupMember, updateGroup } from '../api/conversations';
 import { useAuthStore } from '../stores/useAuth';
+import { Conversation } from '../api/messages';
 
 interface GroupDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  conversation: any | null; // Using any to handle both Conversation types
+  conversation: Conversation | null;
   onUpdate: () => void;
 }
 
@@ -40,8 +41,8 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
       setIsEditing(false);
       setGroupName('');
       onUpdate();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to update group name');
+    } catch (err) {
+      setError(err instanceof Error && 'response' in err && typeof err.response === 'object' && err.response && 'data' in err.response && typeof err.response.data === 'object' && err.response.data && 'error' in err.response.data ? String(err.response.data.error) : 'Failed to update group name');
     } finally {
       setIsLoading(false);
     }
@@ -58,8 +59,8 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
     try {
       await removeGroupMember(conversation._id, userId);
       onUpdate();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to remove member');
+    } catch (err) {
+      setError(err instanceof Error && 'response' in err && typeof err.response === 'object' && err.response && 'data' in err.response && typeof err.response.data === 'object' && err.response.data && 'error' in err.response.data ? String(err.response.data.error) : 'Failed to remove member');
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +148,7 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
           </h3>
 
           <div className="space-y-2">
-            {conversation.participants.map((participant: any) => {
+            {conversation.participants.map((participant) => {
               const isSelf = participant._id === user?.id;
               const isGroupAdmin = participant._id === conversation.groupAdmin;
 

@@ -83,8 +83,8 @@ const GroupChatModal: React.FC<GroupChatModalProps> = ({ isOpen, onClose, onGrou
 
       onGroupCreated();
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to create group');
+    } catch (err) {
+      setError(err instanceof Error && 'response' in err && typeof err.response === 'object' && err.response && 'data' in err.response && typeof err.response.data === 'object' && err.response.data && 'error' in err.response.data ? String(err.response.data.error) : 'Failed to create group');
     } finally {
       setIsLoading(false);
     }

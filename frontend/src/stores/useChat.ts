@@ -1,6 +1,7 @@
 // File: frontend/src/stores/useChat.ts
 import { create } from 'zustand';
-import { Message, Conversation } from '../api/messages';
+import { Message } from '../api/messages';
+import { Conversation } from '../api/conversations';
 
 interface ChatStore {
   conversations: Conversation[];
