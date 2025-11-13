@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { removeGroupMember, updateGroup } from '../api/conversations';
+import { removeGroupMember, updateGroup, Conversation } from '../api/conversations';
 import { useAuthStore } from '../stores/useAuth';
-import { Conversation } from '../api/messages';
 
 interface GroupDetailsModalProps {
   isOpen: boolean;

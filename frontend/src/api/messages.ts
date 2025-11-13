@@ -38,12 +38,16 @@ export interface Conversation {
     isOnline?: boolean;
     lastSeen?: string;
   }>;
-  isGroup?: boolean;
+  isGroup: boolean;
   groupName?: string;
   groupAvatar?: string;
   groupAdmin?: string;
-  lastMessage?: Message;
-  lastMessageAt?: string;
+  lastMessage?: {
+    _id?: string;
+    content: string;
+    createdAt: string;
+  };
+  lastMessageAt: string;
   createdAt: string;
   updatedAt: string;
 }

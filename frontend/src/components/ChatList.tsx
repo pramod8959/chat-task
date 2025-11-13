@@ -1,6 +1,6 @@
 // File: frontend/src/components/ChatList.tsx
 import React from 'react';
-import { Conversation } from '../api/messages';
+import { Conversation } from '../api/conversations';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../stores/useAuth';
 import { useChatStore } from '../stores/useChat';
