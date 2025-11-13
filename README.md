@@ -391,9 +391,18 @@ await sendNotification({
 10. **Test group management:**
     - Click "Group Info" button in the chat header
     - View all members with online status
+    - Admin can click **"+ Add Members"** to add new users
+    - Search for users and add them to the group
     - Admin can update group name
-    - Admin can remove members
+    - Admin can remove members (except themselves)
     - See admin badge on group creator
+
+### Important: Browser Cache
+**If you don't see the "Add Members" button:**
+1. **Hard refresh**: Press `Cmd+Shift+R` (Mac) or `Ctrl+Shift+R` (Windows)
+2. **Clear cache**: Press F12 → Application → Clear site data
+3. **Logout and login again** to refresh the user session
+4. Or use **Incognito/Private browsing mode**
 
 ### Test Offline Behavior
 11. **Test offline messages:**
