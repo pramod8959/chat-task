@@ -94,6 +94,14 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
   const isAdmin = conversation.groupAdmin === user?.id;
   const currentGroupName = conversation.groupName || 'Unnamed Group';
 
+  // Debug logging
+  console.log('Group Admin Check:', {
+    conversationGroupAdmin: conversation.groupAdmin,
+    userId: user?.id,
+    isAdmin,
+    conversation
+  });
+
   const handleUpdateName = async () => {
     if (!groupName.trim()) {
       setError('Group name cannot be empty');

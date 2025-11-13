@@ -50,7 +50,7 @@ export const logout = async (): Promise<void> => {
 /**
  * Refresh access token
  */
-export const refreshToken = async (): Promise<{ accessToken: string }> => {
+export const refreshToken = async (): Promise<{ accessToken: string; user?: { id: string; email: string; username: string; avatar?: string } }> => {
   const response = await apiClient.post('/auth/refresh');
   return response.data;
 };

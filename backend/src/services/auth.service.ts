@@ -85,7 +85,7 @@ export const logoutUser = async (userId: string, refreshToken: string): Promise<
 /**
  * Refresh access token
  */
-export const refreshAccessToken = async (refreshToken: string): Promise<{ accessToken: string }> => {
+export const refreshAccessToken = async (refreshToken: string): Promise<{ accessToken: string; user: IUser }> => {
   // Find user with this refresh token
   const user = await User.findOne({ refreshTokens: refreshToken });
   if (!user) {
@@ -95,5 +95,5 @@ export const refreshAccessToken = async (refreshToken: string): Promise<{ access
   // Generate new access token
   const tokens = generateTokens(user);
 
-  return { accessToken: tokens.accessToken };
+  return { accessToken: tokens.accessToken, user };
 };

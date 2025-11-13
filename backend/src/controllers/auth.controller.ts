@@ -92,10 +92,18 @@ export const refresh = async (req: AuthenticatedRequest, res: Response): Promise
     // Verify refresh token
     verifyRefreshToken(refreshToken);
 
-    // Generate new access token
-    const { accessToken } = await authService.refreshAccessToken(refreshToken);
+    // Generate new access token and get user info
+    const { accessToken, user } = await authService.refreshAccessToken(refreshToken);
 
-    res.status(200).json({ accessToken });
+    res.status(200).json({ 
+      accessToken,
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        avatar: user.avatar,
+      }
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'An error occurred';
     res.status(401).json({ error: message });

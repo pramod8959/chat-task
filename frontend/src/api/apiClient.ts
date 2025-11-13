@@ -48,8 +48,11 @@ apiClient.interceptors.response.use(
           { withCredentials: true }
         );
 
-        // Save new access token
+        // Save new access token and user
         localStorage.setItem('accessToken', data.accessToken);
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
 
         // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
